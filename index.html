@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>吸血蟲 — Leech · 視覺小說</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-tc/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-tc/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-serif-tc/900.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-tc/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-tc/700.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none}
+html,body{width:100%;height:100%;background:#000;overflow:hidden;font-family:'Noto Sans TC',sans-serif}
+#frame{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform:translate(-50%,-50%)}
+#stage{position:absolute;inset:0;background:#000;overflow:hidden;box-shadow:0 0 60px rgba(0,0,0,.9)}
+.bglayer{position:absolute;inset:-40px;background-size:cover;background-position:center;opacity:0;transition:opacity 1s ease;animation:kenburns 26s ease-in-out infinite alternate}
+@keyframes kenburns{from{transform:scale(1)}to{transform:scale(1.07) translate(8px,-6px)}}
+#vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.42) 100%);z-index:3}
+#chars{position:absolute;inset:0;z-index:4;pointer-events:none}
+/* 立繪容器：同一角色的多張表情疊加於同一容器，淡入淡出切換 */
+.sprite{position:absolute;bottom:-6px;height:94%;width:0;transition:opacity .4s ease,transform .4s ease,filter .35s ease,left .45s ease,right .45s ease;transform-origin:50% 100%}
+.sprite img{position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:100%;width:auto;opacity:0;transition:opacity .3s ease;filter:drop-shadow(0 6px 14px rgba(0,0,0,.45));pointer-events:none}
+.sprite.dim{filter:brightness(.55) saturate(.85)}
+.sprite.hidden{opacity:0;transform:translateY(24px)}
+#flashfx{position:absolute;inset:0;z-index:6;pointer-events:none;opacity:0}
+#flashfx.f-white{animation:fw .5s ease}
+#flashfx.f-red{animation:fr .6s ease}
+@keyframes fw{0%{opacity:0;background:#fff}18%{opacity:.95}100%{opacity:0;background:#fff}}
+@keyframes fr{0%{opacity:0;background:radial-gradient(circle,rgba(255,40,40,.75),rgba(120,0,0,.9))}25%{opacity:.9}100%{opacity:0}}
+#stage.shake #innerShake{animation:shk .5s ease}
+#innerShake{position:absolute;inset:0}
+@keyframes shk{0%,100%{transform:translate(0,0)}15%{transform:translate(-14px,6px)}30%{transform:translate(12px,-8px)}45%{transform:translate(-10px,-6px)}60%{transform:translate(9px,7px)}75%{transform:translate(-6px,4px)}90%{transform:translate(4px,-3px)}}
+#topbar{position:absolute;top:0;left:0;right:0;z-index:8;display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:linear-gradient(180deg,rgba(0,0,0,.55),transparent);pointer-events:none}
+#topbar>*{pointer-events:auto}
+#chapterTag{font-family:'Noto Serif TC',serif;color:#e6cf9a;font-size:15px;letter-spacing:3px;text-shadow:0 1px 4px #000}
+#sysbtns{display:flex;gap:6px}
+.sbtn{background:rgba(20,14,30,.6);color:#d9c08a;border:1px solid rgba(216,181,106,.45);border-radius:4px;font-size:12px;padding:5px 10px;cursor:pointer;letter-spacing:1px;transition:.2s}
+.sbtn:hover{background:rgba(216,181,106,.25);color:#fff}
+.sbtn.on{background:#d8b56a;color:#241a08;font-weight:700}
+#dlg{position:absolute;left:60px;right:60px;bottom:26px;height:200px;z-index:7;background:linear-gradient(160deg,rgba(24,15,34,.88),rgba(12,8,20,.92));border:1px solid rgba(216,181,106,.5);border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.7),inset 0 0 40px rgba(216,181,106,.06);padding:34px 40px 20px;backdrop-filter:blur(4px)}
+#dlg::before{content:"";position:absolute;left:14px;right:14px;top:8px;bottom:8px;border:1px solid rgba(216,181,106,.18);border-radius:6px;pointer-events:none}
+#nameplate{position:absolute;top:-18px;left:28px;padding:7px 26px;background:linear-gradient(135deg,#3a2b18,#191008);border:1px solid #d8b56a;border-radius:6px;font-family:'Noto Serif TC',serif;font-size:17px;font-weight:700;letter-spacing:4px;color:#f4e3bb;box-shadow:0 4px 14px rgba(0,0,0,.6)}
+#dtext{font-family:'Noto Serif TC',serif;font-size:21px;line-height:1.85;color:#efe6d2;letter-spacing:1px;text-shadow:0 2px 4px rgba(0,0,0,.8);min-height:110px}
+#dtext.narr{color:#c9c0ae}
+#dtext.think{color:#ffd9e4}
+#nextind{position:absolute;right:22px;bottom:12px;color:#d8b56a;font-size:14px;opacity:0;animation:bnc 1s infinite}
+#nextind.show{opacity:1}
+@keyframes bnc{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+#hint{position:absolute;right:22px;top:-16px;font-size:11px;color:rgba(230,207,154,.55);letter-spacing:2px}
+.overlay{position:absolute;inset:0;z-index:20}
+.hidden{display:none!important}
+#choiceLayer{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:rgba(0,0,0,.35)}
+.chbtn{min-width:460px;padding:14px 40px;background:linear-gradient(135deg,rgba(40,26,52,.92),rgba(20,12,30,.92));border:1px solid #d8b56a;color:#f2e2ba;font-family:'Noto Serif TC',serif;font-size:19px;letter-spacing:2px;border-radius:8px;cursor:pointer;transition:.25s;box-shadow:0 6px 20px rgba(0,0,0,.6)}
+.chbtn:hover{background:linear-gradient(135deg,#d8b56a,#a97f36);color:#20150a;transform:scale(1.04)}
+#chapterCard{display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,3,10,.94);cursor:pointer}
+#ccNum{font-family:'Noto Serif TC',serif;color:#d8b56a;font-size:26px;letter-spacing:14px;margin-bottom:18px;animation:cgin 1s ease}
+#ccTitle{font-family:'Noto Serif TC',serif;font-weight:900;color:#f5ead0;font-size:64px;letter-spacing:22px;text-shadow:0 0 30px rgba(216,181,106,.4);animation:cgin 1.4s ease}
+#ccLine{width:220px;height:1px;background:linear-gradient(90deg,transparent,#d8b56a,transparent);margin-top:26px}
+@keyframes cgin{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+#cgLayer{background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer}
+#cgImg{max-width:88%;max-height:80%;border:6px solid #1c1428;outline:1px solid #d8b56a;box-shadow:0 0 60px rgba(0,0,0,.9);animation:cgin .6s ease}
+#cgCap{margin-top:18px;color:#e6cf9a;font-family:'Noto Serif TC',serif;font-size:18px;letter-spacing:4px}
+#logLayer{background:rgba(5,3,10,.9);display:flex;align-items:center;justify-content:center}
+#logBox{width:820px;max-height:560px;background:rgba(18,12,26,.95);border:1px solid rgba(216,181,106,.5);border-radius:10px;padding:26px 34px;display:flex;flex-direction:column}
+#logBox h3{color:#d8b56a;font-family:'Noto Serif TC',serif;letter-spacing:6px;margin-bottom:14px}
+#logList{overflow-y:auto;flex:1;padding-right:10px}
+#logList::-webkit-scrollbar{width:6px}#logList::-webkit-scrollbar-thumb{background:#d8b56a;border-radius:3px}
+.logE{margin-bottom:12px;font-size:16px;line-height:1.7}
+.logE b{color:#d8b56a;margin-right:8px;font-family:'Noto Serif TC',serif}
+.logE span{color:#e8dfcc}
+#logClose{align-self:flex-end;margin-top:14px}
+#setLayer{background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center}
+#setBox{width:520px;background:rgba(18,12,26,.97);border:1px solid rgba(216,181,106,.5);border-radius:10px;padding:30px 40px;color:#e8dfcc}
+#setBox h3{color:#d8b56a;font-family:'Noto Serif TC',serif;letter-spacing:6px;margin-bottom:20px;text-align:center}
+.setRow{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;font-size:15px;letter-spacing:2px}
+.setRow .grp{display:flex;gap:6px}
+.opt{padding:5px 14px;border:1px solid rgba(216,181,106,.5);background:transparent;color:#d9c08a;border-radius:4px;cursor:pointer;font-size:13px}
+.opt.on{background:#d8b56a;color:#241a08;font-weight:700}
+input[type=range]{width:200px;accent-color:#d8b56a}
+#setClose{width:100%;margin-top:8px}
+#endLayer{background:rgba(5,3,10,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+#endFin{font-family:'Noto Serif TC',serif;font-weight:900;font-size:80px;color:#f5ead0;letter-spacing:30px;text-shadow:0 0 40px rgba(216,181,106,.5)}
+#endSub{color:#d8b56a;letter-spacing:6px;font-family:'Noto Serif TC',serif;margin-bottom:24px}
+#endLayer button{min-width:260px}
+#titleScreen{z-index:30;background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center}
+#titleScreen::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(10,4,16,.82) 85%)}
+#petals{position:absolute;inset:0;z-index:1}
+#titleInner{position:relative;z-index:2;text-align:center}
+#gameTitle{font-family:'Noto Serif TC',serif;font-weight:900;font-size:120px;color:#f5ead0;letter-spacing:34px;text-shadow:0 0 50px rgba(200,30,30,.55),0 4px 10px #000;animation:cgin 1.6s ease}
+#gameSub{font-family:'Noto Serif TC',serif;color:#d8b56a;font-size:22px;letter-spacing:14px;margin:6px 0 10px}
+#gameTag{color:#cbb896;font-size:15px;letter-spacing:4px;margin-bottom:44px}
+#titleInner button{display:block;margin:0 auto 14px;min-width:280px;padding:13px 0;background:rgba(15,9,22,.75);border:1px solid #d8b56a;color:#f2e2ba;font-family:'Noto Serif TC',serif;font-size:20px;letter-spacing:8px;border-radius:6px;cursor:pointer;transition:.25s}
+#titleInner button:hover{background:#d8b56a;color:#241a08;letter-spacing:12px}
+#credit{margin-top:26px;color:rgba(230,207,154,.5);font-size:12px;letter-spacing:3px}
+#loading{z-index:40;background:#0a0612;display:flex;align-items:center;justify-content:center}
+#loadTitle{font-family:'Noto Serif TC',serif;font-weight:900;font-size:44px;color:#f5ead0;letter-spacing:16px;text-align:center;margin-bottom:30px}
+#loadBar{width:420px;height:6px;background:#241a30;border-radius:3px;overflow:hidden;margin:0 auto}
+#loadFill{height:100%;width:0%;background:linear-gradient(90deg,#d8b56a,#f5e3b0);transition:width .3s}
+#loadPct{text-align:center;color:#8f7f60;font-size:13px;margin-top:14px;letter-spacing:2px}
+</style>
+</head>
+<body>
+<div id="frame"><div id="stage">
+<div id="innerShake">
+  <div class="bglayer" id="bgA"></div><div class="bglayer" id="bgB"></div>
+  <div id="vignette"></div>
+  <div id="chars"></div>
+  <div id="flashfx"></div>
+</div>
+<div id="topbar" class="hidden">
+  <div id="chapterTag">吸血蟲</div>
+  <div id="sysbtns">
+    <button class="sbtn" id="btnAuto">自動</button>
+    <button class="sbtn" id="btnSkip">跳過</button>
+    <button class="sbtn" id="btnLog">記錄</button>
+    <button class="sbtn" id="btnSet">設定</button>
+    <button class="sbtn" id="btnMute">♪ON</button>
+  </div>
+</div>
+<div id="dlg" class="hidden">
+  <div id="nameplate">？</div>
+  <div id="dtext"></div>
+  <div id="nextind">▼</div>
+  <div id="hint">點擊 / 空白鍵 繼續</div>
+</div>
+<div id="choiceLayer" class="overlay hidden"></div>
+<div id="chapterCard" class="overlay hidden"><div id="ccNum"></div><div id="ccTitle"></div><div id="ccLine"></div></div>
+<div id="cgLayer" class="overlay hidden"><img id="cgImg" alt=""><div id="cgCap"></div></div>
+<div id="logLayer" class="overlay hidden"><div id="logBox"><h3>歷史記錄</h3><div id="logList"></div><button class="sbtn" id="logClose">關 閉</button></div></div>
+<div id="setLayer" class="overlay hidden"><div id="setBox"><h3>設 定</h3>
+  <div class="setRow"><span>文字速度</span><div class="grp" id="grpSpeed"><button class="opt" data-v="slow">慢</button><button class="opt on" data-v="normal">普通</button><button class="opt" data-v="fast">快</button></div></div>
+  <div class="setRow"><span>自動等待</span><div class="grp" id="grpAuto"><button class="opt" data-v="short">短</button><button class="opt on" data-v="normal">中</button><button class="opt" data-v="long">長</button></div></div>
+  <div class="setRow"><span>音樂音量</span><input type="range" id="volBgm" min="0" max="100" value="55"></div>
+  <div class="setRow"><span>音效音量</span><input type="range" id="volSfx" min="0" max="100" value="65"></div>
+  <button class="sbtn" id="setClose">關 閉</button>
+</div></div>
+<div id="endLayer" class="overlay hidden"><div id="endFin">完</div><div id="endSub">吸血蟲 — Leech — 感謝遊玩</div><button class="chbtn" id="btnRestart">重新開始</button><button class="chbtn" id="btnToTitle">回到標題</button></div>
+<div id="titleScreen" class="overlay hidden"><canvas id="petals"></canvas>
+  <div id="titleInner">
+    <div id="gameTitle">吸血蟲</div>
+    <div id="gameSub">— LEECH —</div>
+    <div id="gameTag">當愛成了寄生，家，就成了牢籠。</div>
+    <button id="btnStart">開 始 遊 戲</button>
+    <button id="btnSetT">環 境 設 定</button>
+    <div id="credit">改編自同名小說《吸血蟲》・ 日式動漫視覺小說</div>
+  </div>
+</div>
+<div id="loading" class="overlay"><div><div id="loadTitle">吸 血 蟲</div><div id="loadBar"><div id="loadFill"></div></div><div id="loadPct">載入資源中… 0%</div></div></div>
+</div></div>
+<script>
+(function(){
+"use strict";
+/* ================= 資源 ================= */
+var IMG={
+xh_s:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/113a2e6c0-cc38-40f8-a177-dcf183719ee0.png",
+xh_sad:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/12a1d23a2-6577-4321-8296-66a639dc177c.png",
+xh_ang:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/10402941b-8264-4319-aa29-d83abc8990bb.png",
+xh_shock:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/1ec237585-76ab-43c2-a6ab-ca06109a3e53.png",
+xh_smug:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/10c0f161d-a55d-4fed-b7aa-4ae6290be44e.png",
+xh_glass:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/1d0fdc187-1a08-44aa-bcd9-1ce007fb51b9.png",
+js_s:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/15dec13e0-6a2d-4c53-9ca5-f87ef34826bc.png",
+js_g:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/176161296-eb1d-4f2a-9cdd-5fa4cc673163.png",
+js_ang:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/18a879ea9-7919-4c91-996f-450552b2e46a.png",
+fa_st:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/13e240f68-0fa4-4963-bcdc-7528344ff15e.png",
+fa_sm:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/1cab52dc1-5c97-4dd6-9a30-cd25adc97350.png",
+fa_scared:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/1b9052b09-caed-4b8b-854f-5ec83ea8cf9a.png",
+fa_lech:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/136e2ee35-0f15-42b7-8e5b-74ed976bb373.png",
+nn_s:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/1d62c8044-77ec-4f31-bc1c-a45553e3da20.png",
+ly_s:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/1b87476ad-ef52-4b5c-8ea6-ba1eef888f76.png",
+me_s:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/13f5f442d-2c9d-463e-b92b-15ba56a1d644.png",
+baby_s:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/1fae9f104-60a8-42b8-b74a-acea4089326d.png",
+bg_title:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/18cd937bc-d3d6-4f60-8fae-3d8c27b17c43.png",
+bg_living:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/173bfbaf1-4c68-4385-82ff-0df0d96082e2.png",
+bg_rest:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/158dde533-185f-4c85-abb0-cd98d30e8a75.png",
+bg_nursery:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/1698b6f8b-15db-4526-a09f-6f24617626a4.png",
+bg_lawyer:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/19f787575-59ee-4b28-a146-2972d72cb792.png",
+bg_cafe:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/19c7e03f1-c9a3-419d-b330-702ec0cae82a.png",
+cg_coffee:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/1fb94221b-dc3f-4ba2-ac4f-617445cdeeec.png",
+cg_ending:"https://image.qwenlm.ai/public_source/958e275f-7fbe-4f7d-b2bb-a587cbb87d75/1db27d987-681b-4704-904f-101c85a7b931.png"
+};
+var CHARS={
+xiaohua:{name:"小花",color:"#ff9db8",expr:{smile:"xh_s",sad:"xh_sad",angry:"xh_ang",shock:"xh_shock",smug:"xh_smug",glass:"xh_glass"}},
+jason:{name:"Jason",color:"#8ab6ff",expr:{smile:"js_s",guilty:"js_g",angry:"js_ang"}},
+father:{name:"公公",color:"#e8b054",expr:{stern:"fa_st",smirk:"fa_sm",scared:"fa_scared",lecher:"fa_lech"}},
+nanny:{name:"陳月嫂",color:"#9fd8b3",expr:{smile:"nn_s"}},
+lawyer:{name:"劉律師",color:"#b9a7e6",expr:{smile:"ly_s"}},
+me:{name:"我",color:"#d7c6a0",expr:{smile:"me_s"}},
+baby:{name:"兒子",color:"#9fd3ff",expr:{smile:"baby_s"},scale:0.62}
+};
+var SPR={};
+/* ============ 綠幕去背 + 裁邊 ============ */
+function processChroma(img){
+var c=document.createElement("canvas");c.width=img.naturalWidth;c.height=img.naturalHeight;
+var x=c.getContext("2d",{willReadFrequently:true});x.drawImage(img,0,0);
+var id=x.getImageData(0,0,c.width,c.height),d=id.data,i,r,g,b,gr,gb;
+for(i=0;i<d.length;i+=4){r=d[i];g=d[i+1];b=d[i+2];gr=g-r;gb=g-b;
+if(g>55&&gr>28&&gb>28){d[i+3]=0;}
+else if(gr>12&&gb>12){d[i+3]=Math.min(d[i+3],Math.max(0,255-(Math.min(gr,gb)-12)*14));d[i+1]=Math.min(g,Math.max(r,b)+8);}
+else if(gr>2&&gb>2){d[i+1]=Math.min(g,Math.max(r,b)+10);}}
+x.putImageData(id,0,0);
+var minX=c.width,minY=c.height,maxX=0,maxY=0,px,py;
+for(py=0;py<c.height;py++)for(px=0;px<c.width;px++){if(d[(py*c.width+px)*4+3]>12){if(px<minX)minX=px;if(px>maxX)maxX=px;if(py<minY)minY=py;if(py>maxY)maxY=py;}}
+if(maxX<=minX||maxY<=minY)return c.toDataURL("image/png");
+var w=maxX-minX+1,h=maxY-minY+1,c2=document.createElement("canvas");c2.width=w;c2.height=h;
+c2.getContext("2d").drawImage(c,minX,minY,w,h,0,0,w,h);
+return c2.toDataURL("image/png");
+}
+/* ================= 劇本 ================= */
+var Q=[],LAB={};
+function bg(k){Q.push({t:"bg",k:k});}function mu(k){Q.push({t:"mu",k:k});}
+function show(c,e,p){Q.push({t:"show",c:c,e:e,p:p});}function hide(c){Q.push({t:"hide",c:c});}
+function hideAll(){Q.push({t:"hideall"});}function fx(k){Q.push({t:"fx",k:k});}
+function sfx(k){Q.push({t:"sfx",k:k});}function N(tx){Q.push({t:"n",tx:tx});}
+function TH(c,tx){Q.push({t:"th",c:c,tx:tx});}function S(c,tx){Q.push({t:"s",c:c,tx:tx});}
+function CHN(num,tt){Q.push({t:"ch",num:num,tt:tt});}function CG(k,cap){Q.push({t:"cg",k:k,cap:cap});}
+function CHO(opts){Q.push({t:"choice",opts:opts});}function LB(id){Q.push({t:"label",id:id});}
+function GO(id){Q.push({t:"goto",id:id});}
+/* ---- 序章 ---- */
+CHN("序章","同學會");
+bg("bg_cafe");mu("daily");
+N("我的同學小花，已經結婚兩年了。夫家是個大地主，老公 Jason 是一個室內設計師，夫妻相處十分和樂。");
+N("跟我們這些單身狗、職業媽媽的生活大相逕庭——小花每天都打扮得漂漂亮亮，跟老公出雙入對，經濟問題更是輪不到她來煩惱。");
+show("me","smile","l");
+S("me","「當上帝為你打開一扇門的同時，必定會為你關起一扇窗。」——那時候的我，還不懂這句話的意思。");
+N("很多事情的真相，並不如我們看到的那麼美好。");
+N("……今天的同學會，小花遲到了。");
+sfx("door");
+show("xiaohua","glass","c");show("baby","smile","r");
+N("正當大家議論紛紛時，門開了——小花獨自一人，推著一輛精緻的嬰兒車走了進來。");
+N("大家不好意思多問，氣氛有些尷尬。小花倒是非常高興，一一主動向老同學噓寒問暖。");
+S("xiaohua","大家～好久不見！怎麼都還是老樣子呀？");
+S("me","小花……妳還好吧？");
+N("小花緩緩摘下了墨鏡，向我露出美麗的微笑。");
+show("xiaohua","smile","c");
+S("xiaohua","很好啊。不過……這兩年發生的事，說來話長。");
+S("xiaohua","就從那頓慶祝晚餐，開始說起吧——");
+fx("white");
+/* ---- 第一章 ---- */
+CHN("第一章","太上皇");
+bg("bg_rest");mu("daily");
+N("某一日，Jason 領了績效獎金，帶小花去高級餐廳吃頓好吃的，順道重溫一下戀愛時的美好。");
+show("jason","smile","l");show("xiaohua","smile","r");
+S("jason","老婆，這陣子辛苦妳了。今晚想吃什麼，儘管點！");
+S("xiaohua","討厭～突然這麼大方，那我就不客氣囉。");
+N("酒足飯飽後，小夫妻倆手牽著手，進了電梯。");
+S("jason","今晚真開心，好像回到我們談戀愛的時候。");
+S("xiaohua","嗯……要是每天都能這樣，就好了。");
+fx("white");bg("bg_living");mu("unease");
+N("然而，一打開家門——客廳的燈光十分刺眼。");
+sfx("door");
+N("只見一個禿頭凸肚的歐吉桑喝著啤酒，政論節目的聲量，也調到了最大。");
+show("father","stern","c");
+N("這位老先生再過幾個禮拜就要退休了，所以開始慢慢將陣地從企業集團，轉移到小夫妻的甜蜜窩。");
+sfx("can");
+N("歐吉桑捏扁了啤酒罐，「框啷」一聲，扔進了垃圾桶。");
+S("father","你們倆，怎麼這麼晚才回來啊？");
+show("jason","guilty","l");
+S("jason","沒有啦，爸……");
+N("Jason 聳拉著耳朵，就像一隻乖巧的黃金獵犬。");
+N("公公銳利的眼神瞬間刺中了小花。她感覺一如往常的不舒服——彷彿自己一絲不掛地照 X 光，全身被看透透。");
+TH("xiaohua","忍住……睜一隻眼閉一隻眼，為老公留點面子。");
+show("xiaohua","smile","r");
+S("xiaohua","爸，您要來之前，怎麼不先跟我們講一聲？那我就去超市買點菜了。");
+S("father","這房子是我的名字，不可以來坐坐嗎？");
+N("重複的句子、理所當然的語氣。因此這位老人可以二十四小時隨時推門而入，不需要別人同意。小花與 Jason 更是無法拒絕，一向感情好的夫妻倆，經常為了這件事有所爭執。");
+N("終於有一天，小花忍不住了——");
+S("xiaohua","你知道嗎？我結婚後才發現，Jason 名下的房產、汽車，通通都是公公買給他的！甚至私底下，還會偷偷匯錢給我老公！");
+S("xiaohua","我勸 Jason 不要再拿爸爸的好處，把房子、車子還給他。大不了我們去外面租房子住，我也回去工作！");
+fx("shake");
+show("jason","angry","l");
+S("jason","我拿爸的錢也是一種孝順！他這輩子的成就就是為家裡付出，他害怕退休後在家裡一點價值也沒有——我這麼做，也是幫爸維護他的自尊心！");
+N("溫柔的丈夫居然大發雷霆。老公的一番歪理，堵得小花不知該如何回答。");
+N("就在這時，太上皇下了聖旨——");
+S("father","結了婚，應當要收斂一些。以後最晚九點半，就得在家。");
+TH("xiaohua","門禁……九點半？我長這麼大以來，家裡從來沒有管過我。");
+S("xiaohua","爸爸是在開玩笑嗎？我們不是小孩子了欸！");
+N("夫妻倆都三十好幾了，偶爾約個會、吃個晚餐什麼的都是日常，要像個小學生一樣準時回家？簡直不可理喻。");
+N("不過，讓小花最不可思議的，是老公和稀泥的態度——");
+show("jason","guilty","l");
+S("jason","好的爸爸，我們以後都聽您的。");
+S("father","嗯。嫁進我家來，總是要守我們家的規矩——你說是吧，兒子？");
+S("jason","嗯～");
+TH("xiaohua","在父親面前，Jason 永遠扮演著乖巧的複讀機——爸爸唸一句，他就答一句。");
+TH("xiaohua","難道……我就這樣忍耐下去嗎？");
+CHO([{tx:"為了這個家，先忍氣吞聲",to:"c1a"},{tx:"至少，守住自己的家門",to:"c1b"}]);
+LB("c1a");TH("xiaohua","算了……為了這個家，我先忍。但我的忍耐，是有限度的。");GO("c1c");
+LB("c1b");TH("xiaohua","不——至少，我要守住最後一點屬於自己的空間。");GO("c1c");
+LB("c1c");
+N("一個禮拜後，小花給家裡換上了密碼鎖。");
+S("xiaohua","這樣以後出門，就不必帶著一串鑰匙到處晃了。包包很重呢。");
+N("公公發現後並沒有生氣。取而代之的，是無止境的冷戰——他把小花當空氣、當隱形人，裝作看不到、聽不到這個媳婦。");
+TH("xiaohua","渾身都不舒服……到底是為什麼？");
+N("幾天後的早餐，歐吉桑終於開口了。");
+S("father","你們翅膀硬了啊——居然敢換鎖。");
+TH("xiaohua","原來……他認為我換鎖，是為了擋住他進門。");
+N("小花恍然大悟——眼前這位長輩，其實是一個極度愛面子的人。不聽任何意見，也絕對不准晚輩反駁他；遇到問題，總是習慣性地用冷暴力壓制對方，直到對方屈服。");
+N("而 Jason，從小到大，都是這樣走過來的。");
+TH("xiaohua","結婚兩年……我現在，才真正看清公公的為人。");
+fx("white");hideAll();bg("bg_cafe");mu("daily");
+show("me","smile","l");show("xiaohua","smile","c");show("baby","smile","r");
+N("咖啡廳裡，小花啜了一口水果茶，語氣雲淡風輕。");
+S("xiaohua","這都不算什麼。真正讓我崩潰的，還在後頭呢——");
+/* ---- 第二章 ---- */
+CHN("第二章","皇位的繼承人");
+bg("bg_nursery");mu("unease");
+N("驗孕棒上，浮現了兩條紅線。");
+show("jason","smile","l");show("xiaohua","smile","r");
+S("jason","我們……我們要有孩子了！！");
+N("Jason 欣喜若狂，抱起小花轉圈圈。");
+N("連公公都突然變得對小花非常慈祥，還在外人面前，高調地規劃著家族的未來——");
+show("father","smirk","c");
+S("father","我孫子以後，一定是臺大醫科！我財產的——唯一繼承人！");
+N("他已經打從心裡認定，小花第一胎一定是個男孩。所謂的「XY 性染色體」理論，在他那裡是絕對不成立的。");
+N("接下來，公公更以一種「皇位後繼有人」的心態，頻繁出入 Jason 與小花的家。不管之前的密碼鎖是不是為了擋他——現在，也沒有用了。");
+N("除了面臨各式燉補的攻擊，公公還主動擔任起嬰兒房的監工，裝修費用也由他自掏腰包——夫妻倆理所當然地，沒有任何話語權。");
+TH("xiaohua","看著這間「男孩系」設計的新生兒房……如果肚子裡的這塊肉不是帶把的，該怎麼辦？往後，還有好日子過嗎？");
+N("懷孕四個月後，小花去醫院照了超音波。");
+S("xiaohua","（滿懷感激地捏著照片）幸好……是個男孫。謝天謝地。");
+TH("xiaohua","不然憑公公的強勢作風，搞不好會讓 Jason 去外面找小三也說不定……");
+N("但這，並不代表小花從此就可以「母憑子貴」——坐完月子後，公公居然直接搬了進來，打著照顧孫子的名義，正式侵略了這個家。");
+mu("tension");
+hide("jason");
+N("白天 Jason 去上班，家裡只剩公公一個男人。他仗著「主人翁」的身分四處指揮；私底下的生活習慣，更讓小花覺得非常噁心。");
+N("例如洗完澡的時候，這位歐吉桑總是光裸著上半身，下半身只穿一條花色四角大內褲，挺著大肚皮從浴室走出來，悠閒地坐在客廳沙發上挖挖耳朵、摳摳鼻子。");
+show("father","stern","c");show("nanny","smile","l");show("xiaohua","smile","r");
+N("月嫂極為尷尬地躲進小花與寶寶的房中，小聲地關上了門。");
+S("xiaohua","爸……您在家裡，還是把衣服穿好吧！");
+S("father","輪得到妳說話？");
+S("xiaohua","沒有啦，爸。陳小姐只是覺得，這樣子很尷尬。");
+S("father","月子公司有叫她們管人家的私事嗎？看不下去，就回去好了！");
+N("看來，這位歐吉桑完全不懂何謂「避嫌」的道理。");
+N("更令小花煩躁的是，公公還很喜歡跟一個女網友在社群軟體上聊天，視訊的音量非常大聲，講話的內容，更是不堪入耳——");
+show("father","lecher","c");
+S("father","把衣服拉高一點～對、對，把裙子脫下來，讓我看看！");
+N("小花幾度差點要把寶寶的耳朵摀上。神奇的是，他總能在 Jason 回到家時敏捷地切掉通訊——所以兒子始終不知道，親生父親有多猥瑣。");
+N("生產後的哺乳期，小花常常堵奶。那幾天，胸部漲得跟石頭一樣，還發起了燒。月嫂幫她按摩了幾下也沒有用，決定要載她去醫院看看——結果，被房外的公公聽到了。");
+hide("nanny");
+S("father","等我兒子下班回家，幫妳吸一吸就好了。幹嘛，去醫院？");
+fx("red");
+TH("xiaohua","……若不是他一本正經的樣子，我真的會認為公公是在對我性騷擾。好歹也是個有頭有臉的人物，怎麼會說出這麼骯髒的話語呢？");
+show("nanny","smile","l");
+N("站在後面、抱著寶寶的月嫂，更是傻在現場，完全不知該說什麼好。");
+N("小花終於忍不住，向 Jason 告起了狀。然而換來的，卻是丈夫的質問——");
+hide("nanny");show("jason","guilty","l");
+S("jason","我已經 google 過了……爸說的話，沒錯啊？");
+fx("white");
+N("小花，婚後第一次哭了。");
+show("xiaohua","sad","r");
+TH("xiaohua","我的三觀，快要崩塌了……什麼時候，公公可以跟媳婦說這種沒有禮貌的話？");
+N("聽到 Jason 這麼窩囊的發言，有點產後憂鬱的她，心情更不好了。");
+hide("jason");hide("father");
+N("四天後的中午，月嫂在廚房做飯。寶寶可能被抽油煙機的聲音嚇到了，開始嚎啕大哭。小花抱起嬰兒，一邊哄，一邊準備餵母乳。");
+N("公公聽到聲音，大步走入了臥房。小花嚇了一跳，急忙拿起一條浴巾遮住自己身體。");
+show("father","stern","c");show("xiaohua","shock","r");
+S("xiaohua","爸！我在餵奶！");
+S("father","我知道！");
+TH("xiaohua","知道，還繼續往前走？！就算是哺乳期，女人的胸部也不能隨便給別人看啊！");
+N("眼看太上皇就要走到面前，小花一口氣抱著嬰兒面對牆壁，背對這個老色狼。");
+S("xiaohua","爸——請你出去！");
+show("nanny","smile","l");
+S("nanny","菜、菜煮好了！");
+N("最後，還是月嫂救了小花。她敏捷地擋在太上皇面前；公公點了點頭，走了出去。");
+hide("father");hide("nanny");
+N("睡前，小花把早上發生的事重新講了一遍給 Jason 聽，希望丈夫可以哄她幾句，更希望他可以正視問題、解決問題。");
+show("jason","guilty","l");show("xiaohua","sad","r");
+S("jason","那只是阿公關心孫子而已，何必大驚小怪？");
+N("說完，Jason 轉頭繼續呼呼大睡。");
+TH("xiaohua","在床頭燈下，我嘲笑著自己——究竟是，嫁了什麼東西啊？");
+TH("xiaohua","如果之前只是與公公個性不合、需要磨合……那麼現在，我更確定了——是公公的人品有問題。好色，又鴨霸。");
+N("往後開始，小花盡力使自己的情緒平緩下來，跟公公保持更遠的距離。");
+N("沒想到——公公竟將他的魔掌，伸向了小花養的貓咪。");
+/* ---- 第三章 ---- */
+CHN("第三章","貓的去向");
+mu("tension");hideAll();bg("bg_nursery");
+N("小花的貓，在她結婚後就被關在獨立的貓房內。除非小花將牠抱出來玩耍，不然牠絕不出貓房一步。鏟屎、換水、餵食、清理，全部都由小花負責，家裡的環境維持得非常乾淨。");
+show("father","stern","c");show("xiaohua","smile","r");
+S("father","我說過了——小孩跟寵物在一起，會對他的身體不好！妳什麼時候要把貓送走？");
+N("接著，他示意讓月嫂收拾。自從上次的餵奶事件後，小花開始對公公有了戒心——遇到問題，基本上採取冷處理，也不再跟他爭論小孩跟寵物是否能共存。");
+S("xiaohua","我過幾天就會送了。");
+N("公公感覺自己的拳頭，像是打在了一團棉花上，非常不滿。");
+S("father","哪一天？");
+S("xiaohua","等領養人布置好了，我才送過去。");
+N("不等回應，小花講完便轉身進房，發訊息給爸媽，要他們把貓接回老家去。這件事，就算是解決了。");
+N("然而——第二天走進貓房，眼前的景象讓小花張大了眼睛！");
+fx("white");
+show("xiaohua","shock","r");
+N("貓跳臺、貓砂盆、貓罐頭、貓玩具……甚至，連貓咪都不見了！");
+TH("xiaohua","當然是……某人幹的！！");
+N("小花氣急敗壞地打電話給 Jason，要「某人」出來面對。另一頭的丈夫卻說，一個上午都聯絡不到爸爸。");
+sfx("door");
+N("就在此時，大門的密碼鎖開了——罪魁禍首領著他的豬狗朋友，一邊走進來，一邊談笑風生。");
+show("father","smirk","c");
+S("father","你們不用脫鞋沒關係，反正傭人會打掃！那顆壽山石印章，是我退休前某位議員送的——待會，我拿出來給你們看看！");
+N("小花不想糾正「月嫂不是傭人」這件事，也不想指責公公不該帶病菌回家傳給兒子——她只關心貓咪的下落。");
+S("xiaohua","爸！我的貓不見了！");
+S("father","現在我有客人，等會再說。");
+S("xiaohua","貓——是您送走的，對不對？");
+S("father","年輕人不懂規矩？會不會說話！");
+N("歐吉桑帶著另外兩個歐吉桑準備進書房。小花急忙兩臂一張，擋在了房門前。");
+S("father","……沒錯！貓，我送人了！");
+N("語畢，他轉身繼續跟朋友聊天，完全不把小花放在眼中。");
+fx("red");fx("shake");
+N("小花，終於爆發了——");
+show("xiaohua","angry","r");
+S("xiaohua","沒經過我的同意——你怎麼可以這樣做？！");
+S("father","我是這個家的主人！我高興把貓送給誰，我就送給誰！");
+N("太上皇在朋友面前耀武揚威，他身後兩個老頭，像是在欣賞一齣「公公整治媳婦」的大戲。");
+show("father","lecher","c");
+S("father","還不去餵奶給我孫子喝？怎麼……又堵奶了嗎？嘿嘿……");
+S("xiaohua","你！現在、馬上，把貓給我帶回來！！");
+N("小花一把抓住公公往客廳走，在所有人面前大罵。兒子聽到媽媽的怒吼，「哇」的一聲，也開始扯開喉嚨大喊。");
+fx("shake");sfx("crash");
+N("公公將餐桌上的奶瓶、尿布、奶粉，一股腦通通掃到地上——一團混亂！");
+TH("xiaohua","這是一個長輩該有的風度嗎？！何況他還是有一定水準的人！怎麼可以隨隨便便，就把人家辛苦養的寵物任意丟棄！");
+N("這是公公故意給小花的下馬威——因為，她不會像 Jason 一樣，無條件地服從他。");
+S("xiaohua","爸！人要講道理——你不能老是強迫別人聽你的！");
+show("xiaohua","smug","r");
+S("xiaohua","你要不要去看一下精神科？我媽可以介紹不錯的醫生給你哦。");
+N("小花得意地反擊，卻沒發現——眼前人的臉色，由綠轉紅。");
+sfx("crash");CG("cg_coffee","熱咖啡，潑來的那一瞬間——");
+show("xiaohua","shock","r");
+N("一個裝滿熱咖啡的馬克杯，直接砸向小花的臉！小花來不及反應——左半邊的臉頰被咖啡燙得紅艷，右半邊的臉，也被杯子砸得生疼。");
+S("father","妳是說我精神有問題？！是不是！！");
+N("小花不知哪來的勇氣——彎腰撿起杯子，朝公公扔了回去！");
+sfx("crash");
+show("father","scared","c");
+N("杯子沒砸中人，剛好劃過公公的脖子，在牆壁上摔成碎片。歐吉桑嚇壞了，兩隻手扶在沙發椅上。");
+S("father","賤女人！！");
+N("旁觀的豬朋狗友紛紛告辭。其中一個，還不忘陰陽怪氣地揶揄——");
+N("「現在的老人家，越來越沒有分量了啊？年輕人，都不把我們放在眼裡了！」");
+N("小花如釋重負，感覺自己像報了深仇大恨一樣。");
+show("xiaohua","smug","r");
+TH("xiaohua","結束了……接下來的事，我也準備好了。");
+fx("white");hideAll();bg("bg_cafe");mu("daily");
+show("me","smile","l");show("xiaohua","smile","c");show("baby","smile","r");
+S("me","那……後來呢？");
+S("xiaohua","後來啊——就要問問那位劉律師了。");
+/* ---- 第四章 ---- */
+CHN("第四章","吸血蟲");
+hideAll();bg("bg_living");mu("sad");
+N("Jason 永遠都忘不了那一天。");
+N("他下班回到家後，發現家裡一片狼藉——父親、妻子、兒子、月嫂，還有貓，通通都不見了。");
+sfx("phone");
+N("口袋一陣震動。Jason 急忙掏出了手機。");
+S("lawyer","請問，是王先生嗎？");
+S("jason","……我是。您是？");
+S("lawyer","您好，我是吳小姐的委任律師，敝姓劉。咳咳……反正，您現在趕快來事務所一趟吧。來了，再說。");
+fx("white");bg("bg_lawyer");
+N("律師事務所裡，空氣彷彿結了冰。");
+show("jason","guilty","l");show("lawyer","smile","c");show("father","stern","r");
+S("lawyer","王先生——請看手機裡的影片。這是月嫂陳小姐，在房間裡偷偷錄下的。");
+N("影片中，有一個老人跟一個女人在大吵。接著——老人將咖啡杯扔向了女人，女人的臉，被砸傷了。");
+S("lawyer","吳小姐已經去驗過傷了。根據這部影片的內容——她想對您父親，提出傷害罪告訴。");
+S("father","要告就去告好了！賤女人！");
+S("jason","爸！！小花是我的老婆——你為什麼要一直欺負她？！");
+S("father","賤女人！把我的家搶走了，現在……連兒子也要搶走了？！");
+fx("shake");
+show("jason","angry","l");
+S("jason","是你破壞了我跟小花的家！！你才是……吸血蟲！！");
+S("father","你說什麼！！");
+N("劉律師眼看情況一發不可收拾，急忙安撫父子倆的情緒。然後，他拿出了一個牛皮紙袋，放在桌上。");
+S("lawyer","王先生，吳小姐因為身體不適，所以先帶孩子回娘家去了。這些文件，是她放在我這裡的。");
+S("lawyer","如果您希望吳小姐撤告的話——可以看看文件，再做決定。");
+show("jason","guilty","l");
+N("Jason 顫抖著手，打開了牛皮紙袋——");
+N("離婚協議書、驗傷診斷書、影片與證據清單……一張一張，整整齊齊。");
+TH("jason","這兩年，爸的錢、爸的房子、爸的規矩……我一直以為，那就是孝順。");
+TH("jason","原來……一直餵養那條吸血蟲的人，是我自己。");
+N("原子筆，就在手邊。");
+CHO([{tx:"簽下名字",to:"sga"},{tx:"握著筆的手，遲遲無法落下",to:"sgb"}]);
+LB("sga");N("筆尖落在紙上的聲音，比想像中還要輕。有些告別，其實從兩年前，就已經開始了。");GO("sgc");
+LB("sgb");N("可是他知道——無論簽，或不簽，那個家，都已經回不去了。他閉上眼睛，落下了筆。");GO("sgc");
+LB("sgc");
+N("窗外的夕陽，把事務所染成一片金紅。一段被寄生了兩年的婚姻，終於走到了盡頭。");
+/* ---- 終章 ---- */
+CHN("終章","富有的單親媽媽");
+hideAll();bg("bg_cafe");mu("hope");
+N("故事，說完了。咖啡廳裡，午後的陽光正好。");
+show("me","smile","l");show("xiaohua","smile","c");show("baby","smile","r");
+N("小花獨自一人，推著那輛精緻的嬰兒車，來參加同學會。大家不好意思多問她什麼，氣氛有些尷尬。");
+N("小花倒是非常高興，一一主動向老同學噓寒問暖。");
+S("me","小花……妳，還好吧？");
+N("小花摘下了墨鏡，向我露出美麗的微笑。");
+S("xiaohua","很好啊——我現在，是單親媽媽了。");
+show("xiaohua","smug","c");
+S("xiaohua","而且，是很富有的單親媽媽。");
+CG("cg_ending","陽光正好，來日方長。");
+N("當上帝為你關起一扇窗的時候——別忘了，自己還能親手打開一扇門。");
+N("遇到吸血蟲的時候，最勇敢的事，就是親自把那扇門關上。");
+N("——《吸血蟲》　完——");
+Q.push({t:"end"});
+Q.forEach(function(c,i){if(c.t==="label")LAB[c.id]=i;});
+/* ================= 音樂引擎 ================= */
+var actx=null,musicBus=null,sfxBus=null,masterG=null,noiseBuf=null;
+var SETT={speed:"normal",autoWait:"normal",bgm:.55,sfx:.65,muted:false};
+var SPEED_MS={slow:55,normal:28,fast:12},AUTOWAIT={short:700,normal:1300,long:2100};
+var NOTEIDX={C:0,"C#":1,Db:1,D:2,"D#":3,Eb:3,E:4,F:5,"F#":6,Gb:6,G:7,"G#":8,Ab:8,A:9,"A#":10,Bb:10,B:11};
+function n2f(nn){var m=nn.match(/^([A-G][#b]?)(\d)$/);if(!m)return 440;var s=NOTEIDX[m[1]]+(+m[2]+1)*12;return 440*Math.pow(2,(s-69)/12);}
+function initAudio(){if(actx)return;var AC=window.AudioContext||window.webkitAudioContext;actx=new AC();
+masterG=actx.createGain();masterG.connect(actx.destination);
+musicBus=actx.createGain();musicBus.connect(masterG);
+sfxBus=actx.createGain();sfxBus.connect(masterG);applyVol();}
+function applyVol(){if(!actx)return;masterG.gain.value=SETT.muted?0:1;musicBus.gain.value=SETT.bgm;sfxBus.gain.value=SETT.sfx;}
+function getNoise(){if(!noiseBuf){noiseBuf=actx.createBuffer(1,actx.sampleRate,actx.sampleRate);var d=noiseBuf.getChannelData(0),i;for(i=0;i<d.length;i++)d[i]=Math.random()*2-1;}return noiseBuf;}
+function tone(type,f,t,dur,vol,bell){var o=actx.createOscillator(),v=actx.createGain();o.type=type;o.frequency.value=f;
+v.gain.setValueAtTime(0.0001,t);v.gain.exponentialRampToValueAtTime(vol,t+0.012);
+v.gain.exponentialRampToValueAtTime(0.0001,t+Math.max(dur+(bell?1.4:0.22),0.12));
+o.connect(v);v.connect(musicBus);o.start(t);o.stop(t+dur+1.8);}
+function padTone(f,t,dur,vol){[-6,5].forEach(function(dt){var o=actx.createOscillator(),fl=actx.createBiquadFilter(),v=actx.createGain();
+o.type="sawtooth";o.frequency.value=f;o.detune.value=dt;fl.type="lowpass";fl.frequency.value=720;
+v.gain.setValueAtTime(0.0001,t);v.gain.linearRampToValueAtTime(vol,t+0.5);v.gain.setValueAtTime(vol,t+Math.max(0.5,dur-0.4));v.gain.linearRampToValueAtTime(0.0001,t+dur+0.6);
+o.connect(fl);fl.connect(v);v.connect(musicBus);o.start(t);o.stop(t+dur+1);});}
+function noiseHit(t,dur,vol,ftype,freq,bus){var src=actx.createBufferSource();src.buffer=getNoise();var fl=actx.createBiquadFilter();fl.type=ftype;fl.frequency.value=freq;
+var v=actx.createGain();v.gain.setValueAtTime(vol,t);v.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+src.connect(fl);fl.connect(v);v.connect(bus||sfxBus);src.start(t);src.stop(t+dur+0.05);}
+function playNote(ch,n,t,dur,g){var f=n2f(n);
+if(ch==="bell"){tone("sine",f,t,dur,0.16*g,true);tone("sine",f*4,t,0.3,0.04*g,true);}
+else if(ch==="piano"){tone("triangle",f,t,dur,0.2*g);tone("sine",f*2,t,dur*0.7,0.05*g);}
+else if(ch==="pad"){padTone(f,t,dur,0.045*g);}
+else if(ch==="bass"){tone("sine",f,t,dur,0.22*g);}
+else if(ch==="tick"){noiseHit(t,0.04,0.035*g,"highpass",6000,musicBus);}
+else if(ch==="thump"){tone("sine",55,t,0.4,0.3*g);}}
+function EV(s,ch,n,l,g){return{s:s,ch:ch,n:n,l:l,g:g||1};}
+var TRACKS={
+daily:{bpm:96,loop:64,events:[
+EV(0,"bell","E5",3),EV(2,"bell","G5",3),EV(4,"bell","C6",3),EV(6,"bell","G5",2),EV(8,"bell","A5",3),EV(10,"bell","E5",2),EV(12,"bell","G5",4),
+EV(16,"bell","F5",3),EV(18,"bell","A5",3),EV(20,"bell","C6",3),EV(22,"bell","A5",2),EV(24,"bell","G5",3),EV(26,"bell","E5",2),EV(28,"bell","F5",4),
+EV(32,"bell","C5",3),EV(34,"bell","E5",3),EV(36,"bell","G5",3),EV(38,"bell","B5",3),EV(40,"bell","C6",4),EV(44,"bell","G5",3),
+EV(48,"bell","A5",3),EV(50,"bell","F5",3),EV(52,"bell","E5",3),EV(54,"bell","D5",2),EV(56,"bell","C5",6),
+EV(0,"bass","C3",7),EV(8,"bass","G2",7),EV(16,"bass","A2",7),EV(24,"bass","E2",7),EV(32,"bass","F2",7),EV(40,"bass","C3",7),EV(48,"bass","G2",7),EV(56,"bass","C3",7),
+EV(0,"tick",null,1,.5),EV(8,"tick",null,1,.5),EV(16,"tick",null,1,.5),EV(24,"tick",null,1,.5),EV(32,"tick",null,1,.5),EV(40,"tick",null,1,.5),EV(48,"tick",null,1,.5),EV(56,"tick",null,1,.5)]},
+unease:{bpm:72,loop:64,events:[
+EV(0,"piano","A3",8),EV(8,"piano","C4",6),EV(16,"piano","B3",8),EV(26,"piano","A3",6),EV(34,"piano","G3",6),EV(42,"piano","F3",6),EV(50,"piano","E3",12),
+EV(0,"pad","A2",30),EV(0,"pad","E3",30),EV(0,"pad","C4",30),EV(32,"pad","F2",30),EV(32,"pad","C3",30),EV(32,"pad","A3",30),
+EV(0,"bass","A2",30),EV(32,"bass","F2",30),EV(56,"bell","E4",10,.5)]},
+tension:{bpm:112,loop:32,events:[
+EV(0,"bass","D2",1.5,.8),EV(2,"bass","D2",1.5,.8),EV(4,"bass","D2",1.5,.8),EV(6,"bass","D2",1.5,.8),
+EV(8,"bass","D2",1.5,.8),EV(10,"bass","D2",1.5,.8),EV(12,"bass","D2",1.5,.8),EV(14,"bass","D2",1.5,.8),
+EV(16,"bass","F2",1.5,.8),EV(18,"bass","F2",1.5,.8),EV(20,"bass","F2",1.5,.8),EV(22,"bass","F2",1.5,.8),
+EV(24,"bass","Eb2",1.5,.8),EV(26,"bass","Eb2",1.5,.8),EV(28,"bass","Eb2",1.5,.8),EV(30,"bass","Eb2",1.5,.8),
+EV(12,"piano","Eb5",2,.8),EV(28,"piano","D5",2,.8),EV(0,"pad","D2",30,.6),
+EV(0,"thump",null,1),EV(16,"thump",null,1),
+EV(0,"tick",null,1,.3),EV(4,"tick",null,1,.3),EV(8,"tick",null,1,.3),EV(12,"tick",null,1,.3),EV(16,"tick",null,1,.3),EV(20,"tick",null,1,.3),EV(24,"tick",null,1,.3),EV(28,"tick",null,1,.3)]},
+sad:{bpm:60,loop:64,events:[
+EV(0,"piano","G3",10),EV(12,"piano","Bb3",8),EV(22,"piano","A3",8),EV(32,"piano","D4",12),EV(46,"piano","C4",8),EV(54,"piano","Bb3",16),
+EV(0,"pad","G2",40),EV(0,"pad","D3",40),EV(32,"pad","C3",30),EV(32,"pad","Eb3",30),
+EV(0,"bass","G2",30),EV(32,"bass","C3",30),EV(40,"bell","G4",6,.5),EV(56,"bell","F4",8,.5)]},
+hope:{bpm:104,loop:64,events:[
+EV(0,"bell","D5",2),EV(2,"bell","F#5",2),EV(4,"bell","A5",4),EV(8,"bell","F#5",2),EV(10,"bell","E5",2),EV(12,"bell","D5",4),
+EV(16,"bell","A5",4),EV(20,"bell","B5",2),EV(22,"bell","A5",2),EV(24,"bell","F#5",6),
+EV(32,"bell","D5",2),EV(34,"bell","F#5",2),EV(36,"bell","A5",4),EV(40,"bell","B5",2),EV(42,"bell","A5",2),EV(44,"bell","G5",4),
+EV(48,"bell","F#5",2),EV(50,"bell","E5",2),EV(52,"bell","D5",6),EV(60,"bell","A5",3),
+EV(0,"bass","D3",7),EV(8,"bass","A2",7),EV(16,"bass","B2",7),EV(24,"bass","F#2",7),EV(32,"bass","G2",7),EV(40,"bass","D3",7),EV(48,"bass","A2",7),EV(56,"bass","D3",7),
+EV(0,"pad","D4",14),EV(0,"pad","A4",14),EV(32,"pad","G3",14),EV(32,"pad","D4",14),EV(48,"pad","A3",14)]}
+};
+var musicState={name:null,timer:null,step:0,next:0};
+function playMusic(nm){if(!actx)return;stopMusic();var tr=TRACKS[nm];if(!tr)return;
+musicState.name=nm;musicState.step=0;musicState.next=actx.currentTime+0.08;
+musicState.timer=setInterval(function(){var spb=60/tr.bpm/4;
+while(musicState.next<actx.currentTime+0.18){var s=musicState.step%tr.loop,i,e;
+for(i=0;i<tr.events.length;i++){e=tr.events[i];if(e.s===s){if(e.ch==="tick"||e.ch==="thump")playNote(e.ch,null,musicState.next,e.l*spb,e.g);else playNote(e.ch,e.n,musicState.next,e.l*spb,e.g);}}
+musicState.next+=spb;musicState.step++;}},50);}
+function stopMusic(){if(musicState.timer){clearInterval(musicState.timer);musicState.timer=null;}musicState.name=null;}
+/* -------- 音效 -------- */
+function sfxPlay(id){if(!actx)return;var t=actx.currentTime,i;
+if(id==="click"){tone2("square",900,t,0.05,0.15);}
+else if(id==="blip"){tone2("square",1200+Math.random()*300,t,0.02,0.05);}
+else if(id==="door"){tone2("sine",95,t,0.28,0.5);noiseHit(t,0.12,0.2,"lowpass",300);}
+else if(id==="can"){noiseHit(t,0.06,0.4,"bandpass",2400);tone2("square",680,t+0.02,0.06,0.2);}
+else if(id==="crash"){noiseHit(t,0.3,0.5,"highpass",2500);tone2("sine",60,t,0.3,0.5);
+for(i=0;i<5;i++)tone2("sine",1600+Math.random()*1800,t+0.02+i*0.04,0.12,0.12);}
+else if(id==="phone"){for(i=0;i<3;i++){tone2("sine",440,t+i*0.9,0.35,0.18);tone2("sine",480,t+i*0.9,0.35,0.18);}}
+else if(id==="sting"){tone2("sine",65,t,1.2,0.5);tone2("sine",1200,t,0.5,0.1);tone2("sine",900,t+0.15,0.6,0.08);}}
+function tone2(type,f,t,dur,vol){var o=actx.createOscillator(),v=actx.createGain();o.type=type;o.frequency.value=f;
+v.gain.setValueAtTime(vol,t);v.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+o.connect(v);v.connect(sfxBus);o.start(t);o.stop(t+dur+0.05);}
+/* ================= 引擎 ================= */
+var $=function(s){return document.querySelector(s);};
+var frameEl=$("#frame"),stageEl=$("#stage"),bgA=$("#bgA"),bgB=$("#bgB"),charsEl=$("#chars"),flashEl=$("#flashfx"),
+dlgEl=$("#dlg"),npEl=$("#nameplate"),dtEl=$("#dtext"),nextEl=$("#nextind"),topEl=$("#topbar"),chapEl=$("#chapterTag"),
+titleEl=$("#titleScreen"),loadEl=$("#loading"),loadFill=$("#loadFill"),loadPct=$("#loadPct");
+var G={i:0,running:false,typing:false,finishType:null,onProceed:null,autoT:null,auto:false,skip:false,waitChoice:false,started:false};
+var sprEls={},slotOwner={l:null,c:null,r:null},charPos={};
+function fit(){var s=Math.min(window.innerWidth/1280,window.innerHeight/720);frameEl.style.transform="translate(-50%,-50%) scale("+s+")";}
+window.addEventListener("resize",fit);fit();
+var bgFlip=false;
+function setBg(k){var url=IMG[k];var nxt=bgFlip?bgA:bgB,cur=bgFlip?bgB:bgA;nxt.style.backgroundImage="url("+url+")";nxt.style.opacity=1;cur.style.opacity=0;bgFlip=!bgFlip;}
+function posStyle(el,p){if(p==="l"){el.style.left="6%";el.style.right="";}else if(p==="r"){el.style.right="6%";el.style.left="";}else{el.style.left="50%";el.style.right="";}}
+function resolveSrc(ch,ex){var info=CHARS[ch];if(!info)return "";
+var k=info.expr[ex]||info.expr[Object.keys(info.expr)[0]];
+return SPR[k]||IMG[k]||"";}
+/* ---- 立繪管理：位置佔位 + 表情疊圖淡入淡出 ---- */
+function showChar(ch,ex,pos){var info=CHARS[ch];if(!info)return;
+/* 1) 若該位置站著別的角色 → 先讓他淡出退場，避免重疊 */
+var prev=slotOwner[pos];
+if(prev&&prev!==ch)hideChar(prev);
+/* 2) 若此角色原本站在其他位置 → 釋出舊位置（原位平滑移動） */
+var oldPos=charPos[ch];
+if(oldPos&&oldPos!==pos&&slotOwner[oldPos]===ch)slotOwner[oldPos]=null;
+slotOwner[pos]=ch;charPos[ch]=pos;
+var el=sprEls[ch];
+if(!el){el=document.createElement("div");el.className="sprite hidden";el._imgs={};charsEl.appendChild(el);sprEls[ch]=el;}
+el.style.height=(94*(info.scale||1))+"%";
+posStyle(el,pos);
+/* 3) 取得／建立該表情的 img（同角色各表情疊在同一容器） */
+var im=el._imgs[ex];
+if(!im){im=document.createElement("img");el._imgs[ex]=im;el.appendChild(im);im.src=resolveSrc(ch,ex);}
+/* 4) 目標表情淡入、其餘淡出（等新圖載入完成才淡入，避免閃空白） */
+Object.keys(el._imgs).forEach(function(k){var x=el._imgs[k];
+if(k===ex){if(x.complete&&x.naturalWidth>0){x.style.opacity=1;}
+else{x.addEventListener("load",function(){x.style.opacity=1;},{once:true});
+x.addEventListener("error",function(){x.style.opacity=1;},{once:true});}}
+else{x.style.opacity=0;}});
+/* 5) 說話者置頂、其他角色退後微暗 */
+el.style.zIndex=10;el.classList.remove("dim");
+Object.keys(sprEls).forEach(function(k){if(k!==ch){sprEls[k].style.zIndex=5;sprEls[k].classList.add("dim");}});
+requestAnimationFrame(function(){el.classList.remove("hidden");});}
+function hideChar(ch){var el=sprEls[ch];if(el)el.classList.add("hidden");
+var p=charPos[ch];if(p&&slotOwner[p]===ch)slotOwner[p]=null;delete charPos[ch];}
+function hideAllChars(){Object.keys(sprEls).forEach(hideChar);slotOwner={l:null,c:null,r:null};charPos={};}
+function focusChar(ch){Object.keys(sprEls).forEach(function(k){
+sprEls[k].classList.toggle("dim",k!==ch);sprEls[k].style.zIndex=(k===ch)?10:5;});}
+function doFx(k){if(k==="shake"){stageEl.classList.add("shake");setTimeout(function(){stageEl.classList.remove("shake");},550);}
+else{flashEl.className="";void flashEl.offsetWidth;flashEl.classList.add(k==="red"?"f-red":"f-white");}}
+function addLog(nm,tx){var list=$("#logList");var d=document.createElement("div");d.className="logE";
+d.innerHTML=(nm?"<b>"+nm+"</b>":"<b>……</b>")+"<span></span>";d.querySelector("span").textContent=tx;list.appendChild(d);
+while(list.children.length>300)list.removeChild(list.firstChild);list.scrollTop=list.scrollHeight;}
+function typeText(tx,done){dtEl.textContent="";G.typing=true;nextEl.classList.remove("show");
+var i=0;var tm=setInterval(function(){
+if(G.skip){clearInterval(tm);dtEl.textContent=tx;fin();return;}
+i++;dtEl.textContent=tx.slice(0,i);if(i%2===0)sfxPlay("blip");
+if(i>=tx.length){clearInterval(tm);fin();}},SPEED_MS[SETT.speed]);
+function fin(){G.typing=false;G.finishType=null;nextEl.classList.add("show");done();}
+G.finishType=function(){clearInterval(tm);dtEl.textContent=tx;fin();};}
+function sayLine(ch,tx,mode){return new Promise(function(res){
+var nm="",col="#d8b56a";
+if(mode==="say"){nm=CHARS[ch].name;col=CHARS[ch].color;if(CHARS[ch]&&Object.keys(CHARS[ch].expr).length)focusChar(ch);}
+else if(mode==="think"){nm=CHARS[ch].name+"・心聲";col=CHARS[ch].color;}
+npEl.style.display=(mode==="narr")?"none":"block";
+npEl.textContent=nm;npEl.style.borderColor=col;npEl.style.color=col;
+dtEl.className=(mode==="narr")?"narr":(mode==="think")?"think":"";
+addLog(mode==="narr"?"":nm,tx);
+typeText(tx,function(){
+G.onProceed=function(){G.onProceed=null;if(G.autoT){clearTimeout(G.autoT);G.autoT=null;}res();};
+if(G.skip){setTimeout(function(){if(G.onProceed)G.onProceed();},70);}
+else if(G.auto){G.autoT=setTimeout(function(){if(G.onProceed)G.onProceed();},AUTOWAIT[SETT.autoWait]+Math.min(1200,tx.length*12));}});
+});}
+function chapterCard(num,tt){return new Promise(function(res){sfxPlay("sting");chapEl.textContent=num+"　"+tt;
+var cc=$("#chapterCard");$("#ccNum").textContent=num;$("#ccTitle").textContent=tt;cc.classList.remove("hidden");
+var t0=Date.now(),closed=false;
+function close(){if(closed)return;closed=true;cc.classList.add("hidden");res();}
+cc.onclick=function(e){e.stopPropagation();if(Date.now()-t0>600)close();};
+setTimeout(close,2600);});}
+function showCg(k,cap){return new Promise(function(res){var L=$("#cgLayer");$("#cgImg").src=IMG[k];$("#cgCap").textContent=cap;L.classList.remove("hidden");
+function close(e){e.stopPropagation();L.classList.add("hidden");L.onclick=null;res();}
+L.onclick=close;});}
+function doChoice(opts){return new Promise(function(res){G.waitChoice=true;var L=$("#choiceLayer");L.classList.remove("hidden");L.innerHTML="";
+opts.forEach(function(o){var b=document.createElement("button");b.className="chbtn";b.textContent=o.tx;
+b.onclick=function(e){e.stopPropagation();sfxPlay("click");L.classList.add("hidden");L.innerHTML="";G.waitChoice=false;G.i=LAB[o.to];res();};
+L.appendChild(b);});});}
+function delay(ms){return new Promise(function(r){setTimeout(r,ms);});}
+async function exec(c){
+switch(c.t){
+case "bg":setBg(c.k);await delay(60);break;
+case "mu":playMusic(c.k);break;
+case "show":showChar(c.c,c.e,c.p);await delay(120);break;
+case "hide":hideChar(c.c);await delay(100);break;
+case "hideall":hideAllChars();await delay(100);break;
+case "fx":doFx(c.k);await delay(c.k==="shake"?450:220);break;
+case "sfx":sfxPlay(c.k);await delay(60);break;
+case "n":await sayLine(null,c.tx,"narr");break;
+case "th":await sayLine(c.c,c.tx,"think");break;
+case "s":await sayLine(c.c,c.tx,"say");break;
+case "ch":await chapterCard(c.num,c.tt);break;
+case "cg":await showCg(c.k,c.cap);break;
+case "choice":await doChoice(c.opts);break;
+case "label":break;
+case "goto":G.i=LAB[c.id];break;
+case "end":showEnd();G.waitChoice=true;break;
+}}
+async function run(){if(G.running)return;G.running=true;
+while(G.i<Q.length&&!G.waitChoice){var c=Q[G.i++];await exec(c);}
+G.running=false;}
+function advance(){if(!G.started)return;
+if(!$("#chapterCard").classList.contains("hidden"))return;
+if(!$("#cgLayer").classList.contains("hidden"))return;
+if(!$("#choiceLayer").classList.contains("hidden"))return;
+if(!$("#logLayer").classList.contains("hidden"))return;
+if(!$("#setLayer").classList.contains("hidden"))return;
+if(!$("#endLayer").classList.contains("hidden"))return;
+if(G.typing&&G.finishType){G.finishType();return;}
+if(G.onProceed){if(G.autoT){clearTimeout(G.autoT);G.autoT=null;}var f=G.onProceed;G.onProceed=null;f();}}
+stageEl.addEventListener("click",function(){if(actx&&actx.state==="suspended")actx.resume();advance();});
+document.addEventListener("keydown",function(e){
+if(e.key===" "||e.key==="Enter"){e.preventDefault();advance();}
+if(e.key==="Escape"){$("#logLayer").classList.add("hidden");$("#setLayer").classList.add("hidden");}});
+/* -------- 頂欄按鈕 -------- */
+$("#btnAuto").onclick=function(e){e.stopPropagation();G.auto=!G.auto;this.classList.toggle("on",G.auto);sfxPlay("click");};
+$("#btnSkip").onclick=function(e){e.stopPropagation();G.skip=!G.skip;this.classList.toggle("on",G.skip);sfxPlay("click");};
+$("#btnLog").onclick=function(e){e.stopPropagation();sfxPlay("click");$("#logLayer").classList.remove("hidden");};
+$("#logClose").onclick=function(e){e.stopPropagation();$("#logLayer").classList.add("hidden");};
+$("#btnSet").onclick=function(e){e.stopPropagation();sfxPlay("click");$("#setLayer").classList.remove("hidden");};
+$("#btnMute").onclick=function(e){e.stopPropagation();SETT.muted=!SETT.muted;this.textContent=SETT.muted?"♪OFF":"♪ON";this.classList.toggle("on",SETT.muted);applyVol();};
+$("#setClose").onclick=function(e){e.stopPropagation();$("#setLayer").classList.add("hidden");};
+function grpBind(id,key){var el=$(id);el.querySelectorAll(".opt").forEach(function(b){b.onclick=function(e){e.stopPropagation();
+el.querySelectorAll(".opt").forEach(function(x){x.classList.remove("on");});b.classList.add("on");SETT[key]=b.dataset.v;sfxPlay("click");};});}
+grpBind("#grpSpeed","speed");grpBind("#grpAuto","autoWait");
+$("#volBgm").oninput=function(){SETT.bgm=this.value/100;applyVol();};
+$("#volSfx").oninput=function(){SETT.sfx=this.value/100;applyVol();};
+$("#btnSetT").onclick=function(e){e.stopPropagation();$("#setLayer").classList.remove("hidden");};
+function showEnd(){$("#endLayer").classList.remove("hidden");}
+$("#btnRestart").onclick=function(){location.reload();};
+$("#btnToTitle").onclick=function(){location.reload();};
+/* -------- 標題花瓣 -------- */
+var petCv=$("#petals"),petCtx=petCv.getContext("2d"),petals=[],petRun=false;
+function petInit(){petCv.width=1280;petCv.height=720;petals=[];for(var i=0;i<40;i++)petals.push({x:Math.random()*1280,y:Math.random()*720,r:4+Math.random()*7,a:Math.random()*Math.PI*2,va:(Math.random()-0.5)*0.04,vy:0.6+Math.random()*1.2,vx:-0.4-Math.random()*0.8});petRun=true;petLoop();}
+function petLoop(){if(!petRun)return;petCtx.clearRect(0,0,1280,720);
+petals.forEach(function(p){p.x+=p.vx+Math.sin(p.y*0.01)*0.4;p.y+=p.vy;p.a+=p.va;
+if(p.y>730){p.y=-10;p.x=Math.random()*1300;}
+petCtx.save();petCtx.translate(p.x,p.y);petCtx.rotate(p.a);petCtx.fillStyle="rgba(255,183,197,0.75)";
+petCtx.beginPath();petCtx.ellipse(0,0,p.r,p.r*0.55,0,0,Math.PI*2);petCtx.fill();petCtx.restore();});
+requestAnimationFrame(petLoop);}
+/* -------- 載入 -------- */
+var totalAssets=0,loadedAssets=0;
+function bump(){loadedAssets++;var p=Math.round(loadedAssets/totalAssets*100);loadFill.style.width=p+"%";loadPct.textContent="載入資源中… "+p+"%";}
+function loadPlain(url){return new Promise(function(res){var im=new Image();im.onload=function(){bump();res();};im.onerror=function(){bump();res();};im.src=url;});}
+function loadSprite(key,url){return new Promise(function(res){
+var done=false;
+function finish(src){if(done)return;done=true;SPR[key]=src;bump();res();}
+var cors=new Image();cors.crossOrigin="anonymous";
+cors.onload=function(){try{finish(processChroma(cors));}catch(e){finish(url);}};
+cors.onerror=function(){var p2=new Image();p2.onload=function(){finish(url);};p2.onerror=function(){finish(url);};p2.src=url;};
+cors.src=url;
+});}
+async function preload(){
+var sprKeys=["xh_s","xh_sad","xh_ang","xh_shock","xh_smug","xh_glass","js_s","js_g","js_ang","fa_st","fa_sm","fa_scared","fa_lech","nn_s","ly_s","me_s","baby_s"];
+var plainKeys=["bg_title","bg_living","bg_rest","bg_nursery","bg_lawyer","bg_cafe","cg_coffee","cg_ending"];
+totalAssets=sprKeys.length+plainKeys.length;
+var tasks=sprKeys.map(function(k){return loadSprite(k,IMG[k]);}).concat(plainKeys.map(function(k){return loadPlain(IMG[k]);}));
+await Promise.all(tasks);
+sprKeys.forEach(function(k){if(!SPR[k])SPR[k]=IMG[k];});
+}
+preload().then(function(){
+loadEl.classList.add("hidden");
+titleEl.classList.remove("hidden");
+titleEl.style.backgroundImage="url("+IMG.bg_title+")";
+petInit();});
+$("#btnStart").onclick=function(e){e.stopPropagation();initAudio();if(actx.state==="suspended")actx.resume();
+petRun=false;titleEl.classList.add("hidden");loadEl.classList.add("hidden");
+topEl.classList.remove("hidden");dlgEl.classList.remove("hidden");
+G.started=true;playMusic("sad");run();};
+})();
+</script>
+</body>
+</html>
